@@ -44,6 +44,7 @@ module dataSubnet '../modules/subnet.bicep' = {
     vNetName: virtualNetworkName
     subnetName: 'data-subnet'
     subnetAddressPrefix: dataSubnetAddressPrefix
+    delegation: true
   }
   dependsOn: [
     pipelineSubnet

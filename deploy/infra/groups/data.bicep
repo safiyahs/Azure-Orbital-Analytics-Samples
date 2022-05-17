@@ -173,17 +173,51 @@ resource postgresql_server_resource 'Microsoft.DBforPostgreSQL/servers@2017-12-0
   name: serverNameVar
 }
 
-resource open_postgres_firewall 'Microsoft.DBforPostgreSQL/servers/firewallRules@2017-12-01' = {
-  name: 'allowAll'
+resource dataSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-06-01' existing = {
+  name: '${environmentCode}-vnet/data-subnet'
+  scope: resourceGroup('${environmentCode}-network-rg')
+}
+
+resource pipelineSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-06-01' existing = {
+  name: '${environmentCode}-vnet/pipeline-subnet'
+  scope: resourceGroup('${environmentCode}-network-rg')
+}
+
+resource postgresDataVirtualNetworkRule 'Microsoft.DBforPostgreSQL/servers/virtualNetworkRules@2017-12-01' = {
+  name: 'data-vn-rule'
   parent: postgresql_server_resource
   properties: {
-    endIpAddress: firewallAllowEndIP
-    startIpAddress: firewallAllowStartIP
+    ignoreMissingVnetServiceEndpoint: true
+    virtualNetworkSubnetId: dataSubnet.id
   }
   dependsOn: [
     postgresqlServer
   ]
 }
+
+resource postgresPipelineVirtualNetworkRule 'Microsoft.DBforPostgreSQL/servers/virtualNetworkRules@2017-12-01' = {
+  name: 'pipeline-vn-rule'
+  parent: postgresql_server_resource
+  properties: {
+    ignoreMissingVnetServiceEndpoint: true
+    virtualNetworkSubnetId: pipelineSubnet.id
+  }
+  dependsOn: [
+    postgresqlServer
+  ]
+}
+
+// resource open_postgres_firewall 'Microsoft.DBforPostgreSQL/servers/firewallRules@2017-12-01' = {
+//   name: 'allowAll'
+//   parent: postgresql_server_resource
+//   properties: {
+//     endIpAddress: firewallAllowEndIP
+//     startIpAddress: firewallAllowStartIP
+//   }
+//   dependsOn: [
+//     postgresqlServer
+//   ]
+// }
 module dataUami '../modules/managed.identity.user.bicep' = {
   name: '${namingPrefix}-umi'
   params: {
@@ -216,6 +250,7 @@ module createContainerForTableCreation '../modules/aci.bicep' = {
     server: postgresqlServer.outputs.pgServerName
     username: postgresqlServer.outputs.pgUserName
     dbPassword: postgresAdminLoginPassVar
+    environmentCode: environmentCode
   }
   dependsOn: [
     postgresqlServer

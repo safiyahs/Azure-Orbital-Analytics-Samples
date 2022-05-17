@@ -20,6 +20,8 @@ param userManagedIdentityId string
 
 param userManagedIdentityPrincipalId string
 
+param environmentCode string
+
 param assignRoleToUserManagedIdentity string = 'Owner'
 
 @description('The behavior of Azure runtime if container has stopped.')
@@ -86,16 +88,18 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2021-09-01'
     ]
     osType: 'Linux'
     restartPolicy: restartPolicy
-    ipAddress: {
-      type: 'Public'
-      ports: [
-        {
-          port: port
-          protocol: 'TCP'
-        }
-      ]
-    }
+    subnetIds: [
+      {
+        id: dataSubnet.id
+        name: dataSubnet.name
+      }
+    ]
   }
+}
+
+resource dataSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-06-01' existing = {
+  name: '${environmentCode}-vnet/data-subnet'
+  scope: resourceGroup('${environmentCode}-network-rg')
 }
 
 var role = {
