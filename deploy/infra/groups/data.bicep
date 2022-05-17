@@ -206,18 +206,6 @@ resource postgresPipelineVirtualNetworkRule 'Microsoft.DBforPostgreSQL/servers/v
     postgresqlServer
   ]
 }
-
-// resource open_postgres_firewall 'Microsoft.DBforPostgreSQL/servers/firewallRules@2017-12-01' = {
-//   name: 'allowAll'
-//   parent: postgresql_server_resource
-//   properties: {
-//     endIpAddress: firewallAllowEndIP
-//     startIpAddress: firewallAllowStartIP
-//   }
-//   dependsOn: [
-//     postgresqlServer
-//   ]
-// }
 module dataUami '../modules/managed.identity.user.bicep' = {
   name: '${namingPrefix}-umi'
   params: {

@@ -45,6 +45,9 @@ module dataSubnet '../modules/subnet.bicep' = {
     subnetName: 'data-subnet'
     subnetAddressPrefix: dataSubnetAddressPrefix
     delegation: true
+    serviceEndPoints : [
+      'Microsoft.Sql'
+    ]
   }
   dependsOn: [
     pipelineSubnet
